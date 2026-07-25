@@ -2,6 +2,12 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { AccessToken } from 'livekit-server-sdk'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
+  if (req.method === 'OPTIONS') {
+    res.status(200).end()
+    return
+  }
   try {
     const room =
       (req.query.room as string | undefined)?.trim() || 'default-room'
@@ -29,7 +35,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     })
     const token = await at.toJwt()
 
-    res.status(200).json({ token, url: livekitUrl, room, identity })
+    res.status(200).json({
+      token,
+      url: livekitUrl,
+      room,
+      identity,
+      _debug: { keyPrefix: apiKey.slice(0, 6) + '…' },
+    })
   } catch (err) {
     res.status(500).json({ error: (err as Error).message })
   }
